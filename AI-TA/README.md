@@ -34,3 +34,7 @@ Navigation is functional. Observations and decisions remain in React memory for 
 - `src/App.tsx`: routing and session state.
 
 A later API/service layer can replace local data with Django/PostgreSQL. Any future rule engine or interpretable model must expose its evidence and limitations and retain teacher approval. Production hosting must serve `index.html` for frontend routes.
+
+## Editable learner profiles
+
+The Learner Profile page contains Basic Information, Learning Strengths, Areas Requiring Support, Learner Interests, Communication Preferences, Previous Support / Strategies, Teacher Notes, and the research/privacy note. Native checkboxes support multiple selections. Custom strengths, support observations, and interests can be recorded. Save commits edits to session state; Cancel restores the last saved profile. Refresh clears edits. Saved profiles are separate per learner. No analysis is performed on these fields. Save or cancel pending edits before using the profile’s Continue to Teacher Observation button. Leaving via other navigation discards unsaved edits. The pre-existing observation demo remains available; this update adds no observation functionality.
