@@ -18,3 +18,18 @@ export interface LearnerProfileData {
   previousStrategies: string[];
   teacherNotes: string;
 }
+
+export type ObservationRating = 0 | 1 | 2 | 3;
+export interface IndicatorObservation { rating: ObservationRating; note: string; }
+export interface TeacherObservationData {
+  learnerId: string;
+  /** Snapshot of saved profile context at observation time. */
+  context: Pick<LearnerProfileData, 'name' | 'learnerCode' | 'grade' | 'subject'>;
+  date: string;
+  teacher: string;
+  activity: string;
+  ratings: Record<import('./data/observationIndicators').IndicatorId, IndicatorObservation>;
+  additionalObservation: string;
+  observedStrengths: string[];
+  observedBarriers: string[];
+}
