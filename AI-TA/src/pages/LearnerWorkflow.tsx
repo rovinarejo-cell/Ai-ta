@@ -1,24 +1,109 @@
-import { Link, useParams } from 'react-router-dom';
-import { learners } from '../data/learners';
-import type { Decision, LearnerProfileData, LearnerWork, TeacherObservationData } from '../types';
-import { steps } from '../components/Layout';
-import { LearnerProfile } from './LearnerProfile';
-import { TeacherObservation } from './TeacherObservation';
-import { IndicatorAnalysis } from './IndicatorAnalysis';
-import { PageHeading } from '../components/PageHeading';
-export function LearnerWorkflow({ work, update, profiles, saveProfile, observations, saveObservation, clearObservation }: { observations: Record<string, TeacherObservationData>; saveObservation: (id: string, observation: TeacherObservationData) => void; clearObservation: (id: string) => void; profiles: Record<string, LearnerProfileData>; saveProfile: (id: string, profile: LearnerProfileData) => void; work: Record<string, LearnerWork>; update: (id: string, patch: Partial<LearnerWork>) => void }) {
+import { Link, useParams } from "react-router-dom";
+import { learners } from "../data/learners";
+import type { LearnerProfileData, TeacherObservationData } from "../types";
+import { steps } from "../components/Layout";
+import { LearnerProfile } from "./LearnerProfile";
+import { TeacherObservation } from "./TeacherObservation";
+import { IndicatorAnalysis } from "./IndicatorAnalysis";
+import { Recommendation } from "./Recommendation";
+import { analyzeObservation } from "../services/indicatorAnalysis";
+import { PageHeading } from "../components/PageHeading";
+export function LearnerWorkflow({
+  profiles,
+  saveProfile,
+  observations,
+  saveObservation,
+}: {
+  profiles: Record<string, LearnerProfileData>;
+  saveProfile: (id: string, profile: LearnerProfileData) => void;
+  observations: Record<string, TeacherObservationData>;
+  saveObservation: (
+    id: string,
+    observation: TeacherObservationData,
+  ) => TeacherObservationData;
+}) {
   const { learnerId, stage } = useParams();
-  const learner = learners.find(item => item.id === learnerId);
-  if (!learner || !steps.some(([path]) => path === stage)) return <div className="card"><h1>Page not found</h1><Link to="/">Return to dashboard</Link></div>;
-  const current = work[learner.id] ?? { observation: '', modification: '' };
+  const learner = learners.find((item) => item.id === learnerId);
+  if (!learner || !steps.some(([path]) => path === stage))
+    return (
+      <section className="card">
+        <h1>Page not found</h1>
+        <Link to="/">Return to dashboard</Link>
+      </section>
+    );
   const index = steps.findIndex(([path]) => path === stage);
-  const choose = (decision: Decision) => update(learner.id, { decision });
-  return <><Link className="back-link" to="/">← All learners</Link><PageHeading eyebrow={`${profiles[learner.id].name.toUpperCase()} · ${profiles[learner.id].grade.toUpperCase()}`} title={steps[index][1]} description={`Step ${index + 1} of 6 · A teacher-led path from observation to activity planning.`} /><div className="workflow-progress" aria-label="Workflow progress">{steps.map(([path, label], i) => <Link key={path} className={path === stage ? 'current' : ''} aria-current={path === stage ? 'step' : undefined} to={`/learners/${learner.id}/${path}`}><span>{i + 1}</span><small>{label}</small></Link>)}</div>
-  {stage === 'profile' && <LearnerProfile key={learner.id} learnerId={learner.id} profile={profiles[learner.id]} onSave={profile => saveProfile(learner.id, profile)} />}
-  {stage === 'observation' && <TeacherObservation key={learner.id} learnerId={learner.id} profile={profiles[learner.id]} observation={observations[learner.id]} onSave={data => saveObservation(learner.id, data)} onClear={() => clearObservation(learner.id)} />}
-  {stage === 'analysis' && <IndicatorAnalysis learnerId={learner.id} observation={observations[learner.id]} />}
-  {stage === 'recommendation' && <section className="card"><span className="pill subtle">Explainable recommendation · Sample</span><h2>Try a short, scaffolded activity</h2><p>Offer a worked example, a manageable first step, and a brief check-in.</p><h3>Why this example?</h3><p>A worked example can clarify expectations, and a short first step gives the teacher an opportunity to observe how the learner responds.</p><h3>Evidence and limitations</h3><p>This is a fixed demonstration recommendation. It is not generated from the learner’s observation. No rules or ML model currently run.</p><div className="note">Review suitability against your own observations, learner preferences, and classroom context before choosing an activity.</div></section>}
-  {stage === 'decision' && <section className="card"><h2>You decide what happens next</h2><p>Review the sample activity and choose the support that fits your learner.</p><div className="decision-options">{(['accept', 'modify', 'reject'] as const).map(d => <button key={d} className={`decision-button ${current.decision === d ? 'selected' : ''}`} aria-pressed={current.decision === d} onClick={() => choose(d)}><strong>{d[0].toUpperCase() + d.slice(1)}</strong><span>{d === 'accept' ? 'Use the sample activity' : d === 'modify' ? 'Adapt it to your context' : 'Do not use this activity'}</span></button>)}</div>{current.decision === 'modify' && <><label htmlFor="modification">Your adapted activity</label><textarea id="modification" rows={4} value={current.modification} onChange={e => update(learner.id, { modification: e.target.value })} placeholder="Describe your changes to the activity…" /></>}<p role="status">{current.decision ? `Decision: ${current.decision}. Saved for this session.` : 'No decision selected yet.'}</p></section>}
-  {stage === 'plan' && <section className="card"><span className="pill subtle">Adaptive activity plan · Draft</span><h2>{current.decision === 'reject' ? 'Sample activity rejected' : 'Your next classroom step'}</h2>{!current.decision ? <p>Select Accept, Modify, or Reject in Teacher Decision to prepare a draft plan.</p> : current.decision === 'reject' ? <p>No activity plan has been adopted. Return to Teacher Decision to reconsider or create an adapted activity.</p> : current.decision === 'modify' && !current.modification.trim() ? <p>Add your adapted activity in Teacher Decision to complete the draft.</p> : <><ol className="plan-list"><li><strong>Prepare</strong><p>{current.decision === 'modify' ? current.modification : 'Choose a familiar task and provide one worked example.'}</p></li><li><strong>Try together · 10 minutes</strong><p>Invite the learner to attempt a short first step. Offer a check-in and adjust the level of support.</p></li><li><strong>Reflect</strong><p>Ask what helped and record what you observed for the next session.</p></li></ol><div className="note">Teacher-reviewed demo draft. Timing and follow-up are sample suggestions; no automatic adaptation occurs.</div></>}</section>}
-  {!['profile', 'observation', 'analysis'].includes(stage!) && <div className="page-actions">{index > 0 ? <Link className="button secondary" to={`/learners/${learner.id}/${steps[index - 1][0]}`}>← Back</Link> : <span />}{index < steps.length - 1 ? <Link className="button" to={`/learners/${learner.id}/${steps[index + 1][0]}`}>Continue to {steps[index + 1][1].toLowerCase()} →</Link> : <Link className="button" to="/">Return to dashboard</Link>}</div>}</>;
+  const observation = observations[learner.id];
+  const analysis =
+    observation?.learnerId === learner.id
+      ? analyzeObservation(observation)
+      : undefined;
+  return (
+    <>
+      <Link className="back-link" to="/">
+        ← All learners
+      </Link>
+      <PageHeading
+        eyebrow={`${profiles[learner.id].name.toUpperCase()} · ${profiles[learner.id].grade.toUpperCase()}`}
+        title={steps[index][1]}
+        description={`Step ${index + 1} of 6 · A teacher-led path from observation to activity planning.`}
+      />
+      <div className="workflow-progress" aria-label="Workflow progress">
+        {steps.map(([path, label], i) => (
+          <Link
+            key={path}
+            className={path === stage ? "current" : ""}
+            aria-current={path === stage ? "step" : undefined}
+            to={`/learners/${learner.id}/${path}`}
+          >
+            <span>{i + 1}</span>
+            <small>{label}</small>
+          </Link>
+        ))}
+      </div>
+      {stage === "profile" && (
+        <LearnerProfile
+          key={learner.id}
+          learnerId={learner.id}
+          profile={profiles[learner.id]}
+          onSave={(profile) => saveProfile(learner.id, profile)}
+        />
+      )}
+      {stage === "observation" && (
+        <TeacherObservation
+          key={learner.id}
+          learnerId={learner.id}
+          profile={profiles[learner.id]}
+          observation={observation}
+          onSave={(data) => saveObservation(learner.id, data)}
+        />
+      )}
+      {stage === "analysis" && (
+        <IndicatorAnalysis learnerId={learner.id} analysis={analysis} />
+      )}
+      {(stage === "recommendation" || stage === "decision") && (
+        <Recommendation
+          key={`${learner.id}:${stage}`}
+          learnerId={learner.id}
+          analysis={analysis}
+        />
+      )}
+      {stage === "plan" && (
+        <section className="card">
+          <span className="pill subtle">Future stage</span>
+          <h2>Activity planning is not implemented in V0.3</h2>
+          <p>
+            No activity plan has been generated or applied. A future stage can
+            use teacher-accepted or teacher-modified strategies. Decisions
+            remain available for teacher review.
+          </p>
+          <Link
+            className="button secondary"
+            to={`/learners/${learner.id}/recommendation`}
+          >
+            Review recommendations and decisions
+          </Link>
+        </section>
+      )}
+    </>
+  );
 }
