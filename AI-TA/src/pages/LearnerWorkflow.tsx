@@ -7,6 +7,8 @@ import { TeacherObservation } from "./TeacherObservation";
 import { IndicatorAnalysis } from "./IndicatorAnalysis";
 import { Recommendation } from "./Recommendation";
 import { analyzeObservation } from "../services/indicatorAnalysis";
+import { AdaptiveActivityPlan } from "./AdaptiveActivityPlan";
+import { observationKey } from "../services/observationStorage";
 import { PageHeading } from "../components/PageHeading";
 export function LearnerWorkflow({
   profiles,
@@ -88,21 +90,12 @@ export function LearnerWorkflow({
         />
       )}
       {stage === "plan" && (
-        <section className="card">
-          <span className="pill subtle">Future stage</span>
-          <h2>Activity planning is not implemented in V0.3</h2>
-          <p>
-            No activity plan has been generated or applied. A future stage can
-            use teacher-accepted or teacher-modified strategies. Decisions
-            remain available for teacher review.
-          </p>
-          <Link
-            className="button secondary"
-            to={`/learners/${learner.id}/recommendation`}
-          >
-            Review recommendations and decisions
-          </Link>
-        </section>
+        <AdaptiveActivityPlan
+          key={`${learner.id}:${observation ? observationKey(observation) : "none"}`}
+          learnerId={learner.id}
+          observation={observation}
+          profile={profiles[learner.id]}
+        />
       )}
     </>
   );

@@ -59,8 +59,8 @@ export function Recommendation({
         <p>{researchNote}</p>
         <p>
           Recorded evidence, rule-generated suggestions, and saved teacher
-          decisions are presented separately. No activity plan is created in
-          V0.3.
+          decisions are presented separately. Activity plans require saved
+          Accept or Modify decisions and separate teacher review.
         </p>
       </div>
       {state.error && <p role="alert">{state.error}</p>}
@@ -150,6 +150,9 @@ export function Recommendation({
         separate decision context. Decisions do not automatically create or
         apply an activity plan.
       </div>
+      <Link className="button" to={`/learners/${learnerId}/plan`}>
+        Continue to Adaptive Activity Plan →
+      </Link>
       <div className="page-actions">
         <Link
           className="button secondary"

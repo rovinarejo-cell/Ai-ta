@@ -1,0 +1,10 @@
+# Tested with Python 3.12; PostgreSQL server is not installed by this file.
+asgiref==3.13.0
+Django==5.2.19
+django-cors-headers==4.9.0
+djangorestframework==3.16.1
+psycopg[binary]==3.3.8
+psycopg-binary==3.3.8
+python-dotenv==1.2.4
+sqlparse==0.6.1
+typing_extensions==4.16.0

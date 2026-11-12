@@ -20,7 +20,7 @@ export interface RecommendationDecision {
   observation: TeacherObservationData;
   recommendation: SuggestedRecommendation;
 }
-function validDecision(value: unknown): value is RecommendationDecision {
+export function validDecision(value: unknown): value is RecommendationDecision {
   if (
     !isObject(value) ||
     typeof value.learnerId !== "string" ||

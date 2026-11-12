@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createServer } from "vite";
 const server = await createServer({
   optimizeDeps: { noDiscovery: true, entries: [] },
-  server: { middlewareMode: true },
+  server: { middlewareMode: true, hmr: false, ws: false },
 });
 const { analyzeObservation } = await server.ssrLoadModule(
   "/src/services/indicatorAnalysis.ts",
