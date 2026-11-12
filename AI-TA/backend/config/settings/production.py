@@ -21,3 +21,8 @@ CSRF_COOKIE_SECURE = True
 # Do not trust forwarded headers without a separately reviewed trusted proxy.
 if DATABASES["default"]["OPTIONS"]["sslmode"] != "verify-full":  # noqa: F405
     raise ImproperlyConfigured("Production PostgreSQL requires POSTGRES_SSLMODE=verify-full.")
+
+SESSION_COOKIE_SECURE = True
+
+if any(not origin.startswith("https://") for origin in CSRF_TRUSTED_ORIGINS):  # noqa: F405
+    raise ImproperlyConfigured("Production CSRF trusted origins must use HTTPS.")

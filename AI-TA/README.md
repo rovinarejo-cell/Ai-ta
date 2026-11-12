@@ -92,7 +92,7 @@ Rule E produces one suggestion with both evidence records when both indicators t
 - `src/types.ts`, `src/data`: existing typed model and fictional learner/indicator definitions.
 - `tests/recommendation-rules.test.mjs`, `tests/activity-plans.test.mjs`: reproducible rules, storage, isolation, revisions, plan generation/approval, and failure-path tests.
 
-An eventual API adapter can replace session storage without changing rule generation. The V0.5 backend currently exposes only a versioned health endpoint, with empty domain applications and no migration of frontend data. PostgreSQL is the intended production backend; SQLite is a temporary development option. See [backend setup instructions](backend/README.md). No interpretable model is implemented.
+An eventual API adapter can replace session storage without changing rule generation. The V0.5 backend exposes versioned health and V0.5.3 private session-authentication endpoints, with empty learner-domain applications and no migration of frontend data. PostgreSQL is the intended production backend; SQLite is a temporary development option. See [backend setup instructions](backend/README.md). No interpretable model is implemented.
 
 ## V0.4 Adaptive Activity Plan
 
@@ -119,8 +119,12 @@ Plans use `ai-ta.activity-plans.v1` in browser sessionStorage, with separate rec
 
 ## V0.5 initial backend foundation
 
-See [backend/README.md](backend/README.md) for Python installation, separate development/production settings, Django startup, configuration variables, CORS, and validation. Health: `http://127.0.0.1:8000/api/v1/health/`. Run Django and the existing Vite frontend in separate terminals. The frontend components, types, rules, and browser-storage workflow are unchanged by this foundation. No authentication, learner models, data migration, backend recommendation logic, deployment, or PostgreSQL connectivity claim is included.
+See [backend/README.md](backend/README.md) for Python installation, separate development/production settings, Django startup, configuration variables, CORS, and validation. Health: `http://127.0.0.1:8000/api/v1/health/`. Run Django and the existing Vite frontend in separate terminals. The frontend components, types, rules, and browser-storage workflow are unchanged by this foundation. V0.5.3 adds private teacher provisioning and CSRF-protected session authentication. Learner models, frontend API/auth integration, data migration, backend recommendation logic, deployment, and a PostgreSQL connectivity claim are not included.
 
 ## V0.5.2 database configuration
 
 PostgreSQL remains an explicit opt-in through `DATABASE_ENGINE=postgresql`; temporary SQLite development is the default. Backend configuration tests now cover required PostgreSQL fields, ports, driver compatibility, and production guards. See [PostgreSQL setup and verification](backend/README.md#v052--postgresql-local-setup-and-connection-verification) for installation, database creation, migration, safe configuration, and live connection checks. PostgreSQL has not been connected in this workspace; settings tests and health success do not prove database readiness.
+
+## V0.5.3 teacher authentication
+
+The backend now uses a custom email-login accounts.User model, private teacher/admin provisioning, HTTP-only database sessions, explicit CSRF protection for login/logout, and active teacher/administrator permission classes. No public registration or React integration was added. See [authentication and migration instructions](backend/README.md#v053--teacher-authentication) before migrating any other database; the current local database previously contained only contenttypes metadata. Do not reset a database that already has users.

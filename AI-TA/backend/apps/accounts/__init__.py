@@ -1,1 +1,1 @@
-"""Reserved application boundary; no domain models or business logic yet."""
+"""Private teacher provisioning, session authentication, and account permissions."""

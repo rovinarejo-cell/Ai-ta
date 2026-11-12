@@ -25,6 +25,10 @@ class HealthTests(SimpleTestCase):
         self.assertEqual(response["Content-Type"], "application/json")
         self.assertEqual(response.json(), {"status": "ok", "service": "ai-ta-backend", "version": "v1"})
 
+    def test_health_ignores_session_cookie_without_database_access(self):
+        self.client.cookies["sessionid"] = "synthetic-session-cookie"
+        self.assertEqual(self.client.get(reverse("v1:health")).status_code, 200)
+
     def test_head_and_no_write_methods(self):
         self.assertEqual(self.client.head(reverse("v1:health")).status_code, 200)
         self.assertEqual(self.client.post(reverse("v1:health"), {}, format="json").status_code, 405)
@@ -53,13 +57,23 @@ class HealthTests(SimpleTestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_domain_apps_have_no_models_or_records(self):
-        for name in ("accounts", "students", "observations", "academics", "indicators", "recommendations", "curriculum", "progress", "analytics", "governance"):
+        for name in ("students", "observations", "academics", "indicators", "recommendations", "curriculum", "progress", "analytics", "governance"):
             self.assertEqual(list(apps.get_app_config(name).get_models()), [])
-        self.assertEqual(settings.REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"], [])
+        self.assertEqual(settings.AUTH_USER_MODEL, "accounts.User")
+        self.assertEqual([model.__name__ for model in apps.get_app_config("accounts").get_models()], ["User"])
+        self.assertEqual(settings.REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"], ["rest_framework.authentication.SessionAuthentication"])
 
     def test_request_logging_omits_message_and_request_context(self):
         handler = logging.getLogger("django.request").handlers[0]
         record = logging.LogRecord("django.request", logging.ERROR, __file__, 1, "Do not log fictional learner names or request data", (), None)
+        self.assertTrue(handler.filter(record))
+        self.assertEqual(handler.format(record), "ERROR django.request")
+        try:
+            raise ValueError("Synthetic sensitive details must not reach logs")
+        except ValueError:
+            record = logging.LogRecord("django.request", logging.ERROR, __file__, 1, "Sensitive message", (), sys.exc_info())
+        self.assertTrue(handler.filter(record))
+        self.assertIsNone(record.exc_info)
         self.assertEqual(handler.format(record), "ERROR django.request")
 
 
